@@ -28,7 +28,7 @@ pycryptodome>=3.15
 
 # Data Processing
 pandas>=1.5
-openpyxl>=3.8
+openpyxl>=3.0,<=3.1.5
 
 # Logging & Reporting
 jinja2>=3.1
