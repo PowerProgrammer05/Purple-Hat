@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Register - PURPLE HAT{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box register-box">
+        <div class="auth-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PURPLE HAT Logo" class="auth-logo">
+            <h1>Create Account</h1>
+            <p>Join PURPLE HAT for advanced security testing</p>
+        </div>
+
+        {% if errors %}
+        <div class="error-box">
+            {% for error in errors %}
+            <div class="error-message">
+                <span class="error-icon">⚠️</span> {{ error }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" value="{{ full_name or '' }}" placeholder="John Doe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="{{ username or '' }}" placeholder="choose_username" minlength="3" required>
+                <small>3-20 characters, letters and numbers only</small>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" value="{{ email or '' }}" placeholder="your@email.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Strong password (6+ characters)" minlength="6" required>
+                <small>Minimum 6 characters</small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" minlength="6" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+        </div>
+
+        <div class="auth-features">
+            <h3>What you get:</h3>
+            <ul>
+                <li>✨ Advanced Security Testing</li>
+                <li>🛡️ Multiple Scanning Modes</li>
+                <li>📊 Detailed Vulnerability Reports</li>
+                <li>🔒 Secure Data Storage</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.register-box {
+    animation: slideIn 0.4s ease-out;
+}
+
+.error-box {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(255, 0, 85, 0.1);
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+}
+
+.error-message {
+    color: var(--danger);
+    margin-bottom: 10px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.error-message:last-child {
+    margin-bottom: 0;
+}
+
+.error-icon {
+    font-size: 16px;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.auth-features {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-features h3 {
+    color: var(--primary);
+    font-size: 14px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.auth-features ul {
+    list-style: none;
+    padding: 0;
+}
+
+.auth-features li {
+    color: var(--text-secondary);
+    font-size: 13px;
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@media (max-width: 600px) {
+    .auth-box {
+        width: 90vw;
+        max-width: 100%;
+    }
+}
+</style>
+{% endblock %}

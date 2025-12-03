@@ -94,6 +94,22 @@ class SessionManager:
         self.session_dir = session_dir
         if not os.path.exists(session_dir):
             os.makedirs(session_dir)
+        self.sessions = {}
+    
+    def create_session(self, target: str, username: str) -> str:
+        """Create a new scan session"""
+        import uuid
+        session_id = str(uuid.uuid4())
+        self.sessions[session_id] = {
+            'id': session_id,
+            'target': target,
+            'username': username,
+            'created_at': datetime.now().isoformat(),
+            'status': 'running',
+            'findings': []
+        }
+        self.save_session(session_id, self.sessions[session_id])
+        return session_id
     
     def save_session(self, session_name: str, data: Dict[str, Any]):
         filepath = os.path.join(self.session_dir, f"{session_name}.json")
@@ -109,6 +125,17 @@ class SessionManager:
     
     def list_sessions(self) -> List[str]:
         return [f[:-5] for f in os.listdir(self.session_dir) if f.endswith('.json')]
+    
+    def update_session(self, session_id: str, data: Dict[str, Any]):
+        """Update session data"""
+        self.sessions[session_id] = data
+        self.save_session(session_id, data)
+    
+    def get_session(self, session_id: str) -> Dict[str, Any]:
+        """Get session data"""
+        if session_id in self.sessions:
+            return self.sessions[session_id]
+        return self.load_session(session_id)
 
 
 class StatisticsTracker:

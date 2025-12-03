@@ -4,6 +4,7 @@ Flask-SQLAlchemy>=3.0
 Flask-Login>=0.6.0
 Flask-WTF>=1.0
 gunicorn>=20.1
+Werkzeug>=2.0
 
 # HTTP & Network
 requests>=2.28

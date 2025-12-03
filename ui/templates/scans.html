@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block title %}All Scans - PURPLE HAT{% endblock %}
+
+{% block content %}
+<div class="scans-container">
+    <div class="page-header">
+        <h1>📋 All Scans</h1>
+        <a href="{{ url_for('new_scan') }}" class="btn btn-primary">+ New Scan</a>
+    </div>
+
+    {% if scans %}
+    <div class="scans-table-container">
+        <table class="scans-table">
+            <thead>
+                <tr>
+                    <th>Target</th>
+                    <th>Mode</th>
+                    <th>Status</th>
+                    <th>Findings</th>
+                    <th>Started</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for scan in scans %}
+                <tr class="scan-row">
+                    <td class="target-cell">
+                        <strong>{{ scan.target }}</strong>
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ scan.mode }}">
+                            {{ scan.mode | replace('_', ' ') | title }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ scan.status }}">
+                            {{ scan.status | title }}
+                        </span>
+                    </td>
+                    <td class="findings-count">
+                        <span class="findings-number">{{ scan.findings_count or 0 }}</span>
+                    </td>
+                    <td class="date-cell">
+                        <small>{{ scan.started_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </td>
+                    <td>
+                        {% if scan.duration %}
+                            <small>{{ scan.duration | round(1) }}s</small>
+                        {% else %}
+                            <small>--</small>
+                        {% endif %}
+                    </td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('view_scan', scan_id=scan.id) }}" class="btn-small btn-secondary">View</a>
+                        {% if scan.status == 'completed' %}
+                        <a href="{{ url_for('api_generate_report', scan_id=scan.id) }}" class="btn-small btn-success">Report</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('scans', page=pagination.prev_num) }}" class="page-link">← Previous</a>
+        {% endif %}
+
+        {% for page_num in pagination.iter_pages(left_edge=1, left_margin=2, right_margin=2, right_edge=1) %}
+            {% if page_num %}
+                {% if page_num == pagination.page %}
+                <span class="page-link active">{{ page_num }}</span>
+                {% else %}
+                <a href="{{ url_for('scans', page=page_num) }}" class="page-link">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+            <span class="page-link disabled">...</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+        <a href="{{ url_for('scans', page=pagination.next_num) }}" class="page-link">Next →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h2>No Scans Yet</h2>
+        <p>Start your first security scan to get began with PURPLE HAT</p>
+        <a href="{{ url_for('new_scan') }}" class="btn btn-primary">Start First Scan</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.scans-container {
+    animation: slideIn 0.4s ease-out;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.page-header h1 {
+    color: var(--secondary);
+    font-size: 2rem;
+    margin: 0;
+}
+
+.scans-table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(26, 31, 58, 0.5);
+}
+
+.scans-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.scans-table thead {
+    background: rgba(139, 0, 255, 0.1);
+    border-bottom: 2px solid var(--primary);
+}
+
+.scans-table th {
+    padding: 1rem;
+    text-align: left;
+    color: var(--secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+.scans-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+}
+
+.scans-table tbody tr:hover {
+    background: rgba(139, 0, 255, 0.1);
+}
+
+.scans-table td {
+    padding: 1rem;
+    color: var(--text);
+}
+
+.target-cell {
+    font-weight: 500;
+    color: var(--secondary);
+}
+
+.findings-count {
+    text-align: center;
+}
+
+.findings-number {
+    background: rgba(139, 0, 255, 0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-weight: 600;
+    color: var(--secondary);
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge-ready_to_go {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.badge-professional {
+    background: rgba(255, 180, 0, 0.2);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: rgba(255, 180, 0, 0.2);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.status-running {
+    background: rgba(0, 212, 255, 0.2);
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+}
+
+.status-completed {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.status-failed {
+    background: rgba(255, 0, 85, 0.2);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.date-cell, .actions-cell {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-small {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-secondary {
+    background: rgba(139, 0, 255, 0.2);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.btn-secondary:hover {
+    background: rgba(139, 0, 255, 0.3);
+}
+
+.btn-success {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.btn-success:hover {
+    background: rgba(0, 255, 136, 0.3);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.page-link {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.page-link:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.page-link.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: rgba(26, 31, 58, 0.5);
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h2 {
+    color: var(--secondary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .scans-table {
+        font-size: 0.85rem;
+    }
+
+    .scans-table th, .scans-table td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .actions-cell {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
