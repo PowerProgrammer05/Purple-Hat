@@ -575,7 +575,7 @@ function getPayloads() {
             const list = data.payloads.map(p => `
                 <div class="payload-item">
                     <code>${p}</code>
-                    <button class="btn btn-sm btn-info" onclick="navigator.clipboard.writeText('${p.replace(/'/g, "\\'")}')">Copy</button>
+                    <button class="btn btn-sm btn-info" data-action="copy-payload" data-payload="${p}">Copy</button>
                 </div>
             `).join('');
             
@@ -612,7 +612,7 @@ function getEscalationPayloads() {
             const list = data.payloads.map(p => `
                 <div class="payload-item">
                     <code>${p}</code>
-                    <button class="btn btn-sm btn-info" onclick="navigator.clipboard.writeText('${p.replace(/'/g, "\\'")}')">Copy</button>
+                    <button class="btn btn-sm btn-info" data-action="copy-payload" data-payload="${p}">Copy</button>
                 </div>
             `).join('');
             
@@ -656,7 +656,7 @@ function generateExfil() {
             const list = data.queries.map(q => `
                 <div class="payload-item">
                     <code>${q}</code>
-                    <button class="btn btn-sm btn-info" onclick="navigator.clipboard.writeText('${q.replace(/'/g, "\\'")}')">Copy</button>
+                    <button class="btn btn-sm btn-info" data-action="copy-payload" data-payload="${q}">Copy</button>
                 </div>
             `).join('');
             

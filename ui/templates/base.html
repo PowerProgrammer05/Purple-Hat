@@ -10,8 +10,8 @@
     <header>
         <div class="header-content">
             <div class="logo">
-                <div class="logo-icon">🎭</div>
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PURPLE HAT Logo" onerror="this.style.display='none'">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PURPLE HAT Logo" class="logo-img" onerror="document.querySelector('.logo-icon').style.display='block'">
+                <div class="logo-icon" style="display:none;">🎭</div>
                 <div class="logo-text">PURPLE HAT</div>
             </div>
             <nav>

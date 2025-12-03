@@ -79,9 +79,9 @@
     </div>
 
     <div class="actions-section">
-        <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
-        <button class="btn btn-secondary" onclick="exportCsv()">📥 Export CSV</button>
-        <button class="btn btn-danger" onclick="deleteScan()">🗑️ Delete Scan</button>
+        <button class="btn btn-primary" data-action="generate-report">📊 Generate Report</button>
+        <button class="btn btn-secondary" data-action="export-csv">📥 Export CSV</button>
+        <button class="btn btn-danger" data-action="delete-scan">🗑️ Delete Scan</button>
     </div>
 
     {% else %}

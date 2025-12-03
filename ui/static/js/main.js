@@ -291,7 +291,107 @@ const Events = {
                 const data = Object.fromEntries(formData);
                 
                 // Handle form submission based on form ID
+            // Setup delegated click handlers for action buttons
+            this.setupDelegates();
                 const formId = form.id;
+
+        /**
+         * Setup delegated click handlers for dynamic UI buttons
+         */
+        setupDelegates() {
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const action = btn.dataset.action;
+                if (!action) return;
+                switch (action) {
+                    case 'copy-payload': {
+                        const payload = btn.dataset.payload || '';
+                        if (payload) {
+                            Utils.copyToClipboard(payload);
+                        } else {
+                            Utils.notify('No payload to copy', 'warning');
+                        }
+                        break;
+                    }
+                    case 'copy-reverse-shell':
+                    case 'copy-webshell':
+                    case 'copy-encoded': {
+                        const targetId = btn.dataset.target;
+                        if (targetId) {
+                            const text = document.getElementById(targetId)?.textContent || '';
+                            Utils.copyToClipboard(text);
+                        }
+                        break;
+                    }
+                    case 'download-webshell': {
+                        // Use the same logic as downloadWebShell()
+                        const code = document.getElementById('webshell-code').textContent;
+                        const type = document.getElementById('webshell-type').value;
+                        const ext = {
+                            'php_simple': '.php',
+                            'php_advanced': '.php',
+                            'aspx': '.aspx',
+                            'jsp': '.jsp'
+                        }[type];
+                        const blob = new Blob([code], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `shell${ext}`;
+                        a.click();
+                        break;
+                    }
+                    case 'generate-reverse-shell': {
+                        window.generateReverseShell && window.generateReverseShell();
+                        break;
+                    }
+                    case 'generate-web-shell': {
+                        window.generateWebShell && window.generateWebShell();
+                        break;
+                    }
+                    case 'get-payloads': {
+                        window.getPayloads && window.getPayloads();
+                        break;
+                    }
+                    case 'get-escalation-payloads': {
+                        window.getEscalationPayloads && window.getEscalationPayloads();
+                        break;
+                    }
+                    case 'encode-payload': {
+                        window.encodePayload && window.encodePayload();
+                        break;
+                    }
+                    case 'generate-exfil': {
+                        window.generateExfil && window.generateExfil();
+                        break;
+                    }
+                    case 'generate-report': {
+                        window.generateReport && window.generateReport();
+                        break;
+                    }
+                    case 'export-csv': {
+                        window.exportCsv && window.exportCsv();
+                        break;
+                    }
+                    case 'delete-scan': {
+                        window.deleteScan && window.deleteScan();
+                        break;
+                    }
+                    case 'view-details': {
+                        const id = btn.dataset.id;
+                        if (id && window.viewDetails) {
+                            window.viewDetails(id);
+                        }
+                        break;
+                    }
+                    default: {
+                        // Handle other delegated actions as needed
+                        break;
+                    }
+                }
+            });
+        },
                 if (formId === 'scanForm') {
                     await this.handleScanForm(data);
                 } else if (formId === 'configForm') {

@@ -37,11 +37,14 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'purple-hat-dev-key-change-in-production-2024')
 
 # Database configuration
+# Support for Render PostgreSQL and local SQLite
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///purplehat.db')
-if DATABASE_URL.startswith('sqlite:///'):
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+
+# Handle Render PostgreSQL connection string (convert postgres:// to postgresql://)
+if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSON_SORT_KEYS'] = False

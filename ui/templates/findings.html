@@ -61,9 +61,9 @@
                 </div>
             </div>
 
-            <div class="finding-actions">
-                <button class="btn-small btn-copy" onclick="copyPayload('{{ finding.payload }}')">Copy Payload</button>
-                <button class="btn-small btn-details" onclick="showDetails({{ finding.id }})">Details</button>
+                <div class="finding-actions">
+                <button class="btn-small btn-copy" data-payload="{{ finding.payload | e }}">Copy Payload</button>
+                <button class="btn-small btn-details" data-id="{{ finding.id }}">Details</button>
             </div>
         </div>
         {% endfor %}
@@ -370,17 +370,7 @@
 }
 </style>
 
-<script>
-function copyPayload(payload) {
-    navigator.clipboard.writeText(payload).then(() => {
-        alert('Payload copied to clipboard!');
-    });
-}
-
-function showDetails(findingId) {
-    // Implement modal to show full details
-    alert('Finding details view coming soon!');
-}
+<!-- click handlers for these buttons are handled centrally in ui/static/js/main.js -->
 
 document.getElementById('typeFilter')?.addEventListener('change', function() {
     const type = this.value;

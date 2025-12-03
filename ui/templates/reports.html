@@ -36,10 +36,10 @@
             </div>
 
             <div class="report-actions">
-                <button class="btn-small btn-download" onclick="downloadReport({{ report.id }})">
+                <button class="btn-small btn-download" data-id="{{ report.id }}">
                     ⬇️ Download
                 </button>
-                <button class="btn-small btn-delete" onclick="deleteReport({{ report.id }})">
+                <button class="btn-small btn-delete" data-id="{{ report.id }}">
                     🗑️ Delete
                 </button>
             </div>
@@ -274,17 +274,5 @@
 }
 </style>
 
-<script>
-function downloadReport(reportId) {
-    // Implement report download
-    alert('Report download feature coming soon!');
-}
-
-function deleteReport(reportId) {
-    if (confirm('Are you sure you want to delete this report?')) {
-        // Implement report deletion via API
-        alert('Report deletion feature coming soon!');
-    }
-}
-</script>
+<!-- Button click handling (download/delete) is handled centrally in ui/static/js/main.js -->
 {% endblock %}

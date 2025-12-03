@@ -35,12 +35,18 @@
         .cyber-lines::after{top:75%;background:linear-gradient(90deg, transparent, rgba(157,0,255,0.06), transparent);opacity:0.6}
 
         .grid{display:grid;grid-template-columns:repeat(6,26px);grid-gap:6px;transform:translateY(20px);opacity:0;animation:reveal 1.2s 0.45s cubic-bezier(.2,.8,.2,1) forwards}
-        .grid span{height:8px;background:linear-gradient(90deg,#0ff,#9d00ff);opacity:0.25;border-radius:3px;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))}
+        .grid span{height:8px;background:linear-gradient(90deg,#0ff,#9d00ff);border-radius:3px;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))}
+        .grid span.o1{opacity:0.08}
+        .grid span.o2{opacity:0.17}
+        .grid span.o3{opacity:0.25}
+        .grid span.o4{opacity:0.33}
+        .grid span.o5{opacity:0.42}
+        .grid span.o6{opacity:0.5}
 
         .progress{width:320px;height:8px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,0.025),rgba(255,255,255,0.015));overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02)}
         .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));animation:bar-grow 2.6s linear forwards}
 
-        @keyframes bar-grow{from{width:0}% to{width:100%}}
+        @keyframes bar-grow{from{width:0%}to{width:100%}}
         @keyframes reveal{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
         @keyframes glow{0%{text-shadow:0 0 8px rgba(157,0,255,0.28)}50%{text-shadow:0 0 36px rgba(0,240,255,0.9)}100%{text-shadow:0 0 8px rgba(157,0,255,0.28)}}
         @keyframes drift{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
@@ -61,7 +67,7 @@
             <div class="subtitle">Professional Security Testing — Loading modules…</div>
             <div class="grid" id="grid">
                 {% for i in range(18) %}
-                <span style="opacity:{{ (i % 6 + 1) / 12 }}"></span>
+                <span class="o{{ (i % 6) + 1 }}"></span>
                 {% endfor %}
             </div>
             <div style="height:14px"></div>
