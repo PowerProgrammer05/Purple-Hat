@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10">
+            <h2>Documentation</h2>
+            <p class="muted">Local documentation — read-only. You can also open files on the project's GitHub.</p>
+
+            {% if docs %}
+            <ul class="list-group">
+                {% for d in docs %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ d.name }}</strong>
+                        <div class="muted" style="font-size:0.9rem">Local: <a href="{{ d.local_url }}">View</a> • GitHub: <a href="{{ d.github_url }}" target="_blank">Open on GitHub</a></div>
+                    </div>
+                    <span class="badge badge-primary">MD</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No documentation files found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.muted{color:#888}
+.list-group-item{display:flex;justify-content:space-between;align-items:center;padding:14px;border:1px solid #eee;border-radius:6px;margin-bottom:8px}
+.badge{background:#764ba2;color:white;padding:6px 8px;border-radius:4px}
+</style>
+{% endblock %}

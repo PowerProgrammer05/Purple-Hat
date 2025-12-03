@@ -19,6 +19,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/..')
 from models import db, User, Scan, Finding, Report, Config
 from core.modes import ConfigurationManager, ScanMode
 from core.engine import PurpleHatEngine
+from modules.advanced_tools import (
+    ReverseShellGenerator, WebShellGenerator, PayloadEncoder,
+    ExploitPayloads, PrivilegeEscalation, CredentialTheft,
+    NetworkExploit, AntiForensics, SecurityBypass
+)
 
 # Configure logging
 logging.basicConfig(
@@ -69,10 +74,11 @@ def load_user(user_id):
 
 @app.route('/')
 def index():
-    """Main landing page"""
+    """Main landing page - show animated splash if not logged in"""
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    # render a splash animation then it will redirect client-side to /login
+    return render_template('splash.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -309,6 +315,35 @@ def settings():
         db.session.commit()
     
     return render_template('settings.html', config=user_config)
+
+
+@app.route('/mypage')
+@login_required
+def mypage():
+    """User profile and account information"""
+    user = current_user
+    
+    # Get user statistics
+    total_scans = Scan.query.filter_by(user_id=user.id).count()
+    total_findings = Finding.query.join(Scan).filter(Scan.user_id == user.id).count()
+    
+    # Get finding severity breakdown
+    critical = Finding.query.join(Scan).filter(Scan.user_id == user.id, Finding.severity == 'Critical').count()
+    high = Finding.query.join(Scan).filter(Scan.user_id == user.id, Finding.severity == 'High').count()
+    
+    # Recent scans
+    recent_scans = Scan.query.filter_by(user_id=user.id).order_by(Scan.started_at.desc()).limit(5).all()
+    
+    stats = {
+        'total_scans': total_scans,
+        'total_findings': total_findings,
+        'critical_findings': critical,
+        'high_findings': high,
+        'member_since': user.created_at,
+        'recent_scans': recent_scans
+    }
+    
+    return render_template('mypage.html', user=user, stats=stats)
 
 
 @app.route('/reports')
@@ -639,6 +674,320 @@ def health():
         'status': 'ok',
         'version': '2.0.0',
         'timestamp': datetime.utcnow().isoformat()
+    })
+
+
+# ==================== Advanced Tools ====================
+
+@app.route('/tools')
+@login_required
+def tools():
+    """Advanced tools page"""
+    return render_template('tools.html', user=current_user)
+
+
+@app.route('/docs')
+def docs_index():
+    """List local documentation files (read-only)"""
+    docs_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'docs'))
+    try:
+        files = [f for f in os.listdir(docs_dir) if f.endswith('.md')]
+    except Exception:
+        files = []
+
+    # Map to github raw URLs as an option
+    github_base = 'https://github.com/PowerProgrammer05/Purple-Hat/blob/main/docs'
+    docs = []
+    for f in files:
+        docs.append({
+            'name': f,
+            'local_url': url_for('doc_view', fname=f),
+            'github_url': f"{github_base}/{f}"
+        })
+
+    return render_template('docs_index.html', docs=docs)
+
+
+@app.route('/docs/view/<path:fname>')
+def doc_view(fname):
+    """View a documentation file from docs/ directory (read-only)"""
+    docs_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'docs'))
+    safe_path = os.path.normpath(os.path.join(docs_dir, fname))
+    # Prevent directory traversal
+    if not safe_path.startswith(docs_dir) or not os.path.exists(safe_path):
+        return render_template('error.html', code=404, message='Document not found'), 404
+
+    try:
+        with open(safe_path, 'r', encoding='utf-8') as fh:
+            content = fh.read()
+    except Exception as e:
+        logger.error(f"Error reading doc {fname}: {e}")
+        return render_template('error.html', code=500, message='Unable to read document'), 500
+
+    github_url = f"https://github.com/PowerProgrammer05/Purple-Hat/blob/main/docs/{fname}"
+    return render_template('docs_view.html', filename=fname, content=content, github_url=github_url)
+
+
+@app.route('/api/tools/reverse-shell')
+@login_required
+def api_reverse_shell():
+    """Generate reverse shell payload"""
+    attacker_ip = request.args.get('ip')
+    attacker_port = request.args.get('port')
+    shell_type = request.args.get('type', 'bash')  # bash, python, nc, powershell, perl, php, ruby, jsp
+    
+    if not attacker_ip or not attacker_port:
+        return jsonify({'error': 'Missing ip or port'}), 400
+    
+    try:
+        attacker_port = int(attacker_port)
+    except ValueError:
+        return jsonify({'error': 'Invalid port number'}), 400
+    
+    generator = ReverseShellGenerator()
+    methods = {
+        'bash': generator.bash_reverse_shell,
+        'python': generator.python_reverse_shell,
+        'nc': generator.nc_reverse_shell,
+        'powershell': generator.powershell_reverse_shell,
+        'perl': generator.perl_reverse_shell,
+        'php': generator.php_reverse_shell,
+        'ruby': generator.ruby_reverse_shell,
+        'jsp': generator.jsp_reverse_shell,
+    }
+    
+    method = methods.get(shell_type)
+    if not method:
+        return jsonify({'error': 'Invalid shell type'}), 400
+    
+    payload = method(attacker_ip, attacker_port)
+    
+    return jsonify({
+        'type': shell_type,
+        'payload': payload,
+        'description': f'{shell_type.upper()} reverse shell to {attacker_ip}:{attacker_port}',
+        'difficulty': 'Medium'
+    })
+
+
+@app.route('/api/tools/webshell')
+@login_required
+def api_webshell():
+    """Generate web shell"""
+    shell_type = request.args.get('type', 'php')  # php, aspx, jsp
+    
+    generator = WebShellGenerator()
+    shells = {
+        'php_simple': (generator.php_simple_shell(), 'Simple PHP shell'),
+        'php_advanced': (generator.php_advanced_shell(), 'Advanced PHP shell with features'),
+        'aspx': (generator.aspx_shell(), 'ASP.NET shell'),
+        'jsp': (generator.jsp_shell(), 'JSP shell'),
+    }
+    
+    if shell_type not in shells:
+        return jsonify({'error': 'Invalid shell type'}), 400
+    
+    code, description = shells[shell_type]
+    
+    return jsonify({
+        'type': shell_type,
+        'code': code,
+        'description': description,
+        'extension': {
+            'php_simple': '.php',
+            'php_advanced': '.php',
+            'aspx': '.aspx',
+            'jsp': '.jsp',
+        }.get(shell_type),
+        'method': 'File Upload',
+        'difficulty': 'Hard'
+    })
+
+
+@app.route('/api/tools/payload-encoder')
+@login_required
+def api_payload_encoder():
+    """Encode payload to bypass filters"""
+    payload = request.args.get('payload', '')
+    encoding = request.args.get('encoding', 'url')  # url, double_url, base64, hex, unicode, html, mixed_case
+    
+    if not payload:
+        return jsonify({'error': 'Missing payload'}), 400
+    
+    encoder = PayloadEncoder()
+    methods = {
+        'url': encoder.url_encode,
+        'double_url': encoder.double_url_encode,
+        'base64': encoder.base64_encode,
+        'hex': encoder.hex_encode,
+        'unicode': encoder.unicode_encode,
+        'html': encoder.html_encode,
+        'mixed_case': encoder.mixed_case,
+    }
+    
+    method = methods.get(encoding)
+    if not method:
+        return jsonify({'error': 'Invalid encoding type'}), 400
+    
+    encoded = method(payload)
+    
+    return jsonify({
+        'original': payload,
+        'encoded': encoded,
+        'encoding': encoding,
+        'length_reduction': f"{100 - (len(encoded)/len(payload)*100):.1f}%"
+    })
+
+
+@app.route('/api/tools/exploit-payloads')
+@login_required
+def api_exploit_payloads():
+    """Get common exploitation payloads"""
+    payload_type = request.args.get('type')  # sql, xss, cmd, traversal, xxe, ldap
+    
+    if not payload_type:
+        return jsonify({
+            'available_types': ['sql', 'xss', 'cmd', 'traversal', 'xxe', 'ldap'],
+            'usage': '/api/tools/exploit-payloads?type=sql'
+        }), 400
+    
+    payloads = ExploitPayloads.get_payloads_by_type(payload_type)
+    
+    if not payloads:
+        return jsonify({'error': 'Invalid payload type'}), 400
+    
+    return jsonify({
+        'type': payload_type,
+        'count': len(payloads),
+        'payloads': payloads
+    })
+
+
+@app.route('/api/tools/privilege-escalation')
+@login_required
+def api_privilege_escalation():
+    """Get privilege escalation techniques"""
+    os_type = request.args.get('os')  # linux, windows
+    method = request.args.get('method')  # sudo, suid, capabilities, uac_bypass, privilege_check
+    
+    if not os_type:
+        return jsonify({
+            'os_types': ['linux', 'windows'],
+            'linux_methods': ['sudo', 'suid', 'capabilities'],
+            'windows_methods': ['uac_bypass', 'privilege_check']
+        }), 400
+    
+    payloads = PrivilegeEscalation.get_escalation_payloads(os_type, method or 'sudo')
+    
+    if not payloads:
+        return jsonify({'error': 'Invalid OS or method'}), 400
+    
+    return jsonify({
+        'os': os_type,
+        'method': method or 'sudo',
+        'payloads': payloads,
+        'risk_level': 'Critical'
+    })
+
+
+@app.route('/api/tools/credential-theft')
+@login_required
+def api_credential_theft():
+    """Get credential dumping techniques"""
+    os_type = request.args.get('os')  # linux, windows
+    
+    if not os_type or os_type not in ['linux', 'windows']:
+        return jsonify({
+            'os_types': ['linux', 'windows'],
+            'usage': '/api/tools/credential-theft?os=linux'
+        }), 400
+    
+    techniques = CredentialTheft.CREDENTIAL_DUMP.get(os_type, {})
+    paths = CredentialTheft.CREDENTIAL_PATHS
+    
+    return jsonify({
+        'os': os_type,
+        'techniques': techniques,
+        'common_paths': paths,
+        'difficulty': 'Hard'
+    })
+
+
+@app.route('/api/tools/data-exfiltration')
+@login_required
+def api_data_exfiltration():
+    """Generate data exfiltration queries"""
+    data = request.args.get('data', 'test_data')
+    exfil_type = request.args.get('type', 'dns')  # dns, http
+    domain = request.args.get('domain', 'attacker.com')
+    
+    if exfil_type == 'dns':
+        queries = NetworkExploit.generate_dns_exfiltration(data, domain)
+        return jsonify({
+            'type': 'dns',
+            'queries': queries[:10],  # Show first 10
+            'total': len(queries),
+            'description': 'DNS queries to exfiltrate data via subdomains'
+        })
+    
+    elif exfil_type == 'http':
+        server_url = request.args.get('server', 'attacker.com:8080')
+        requests_list = NetworkExploit.generate_http_exfiltration(data, server_url)
+        return jsonify({
+            'type': 'http',
+            'requests': requests_list[:5],  # Show first 5
+            'total': len(requests_list),
+            'description': 'HTTP requests to exfiltrate data'
+        })
+    
+    return jsonify({'error': 'Invalid exfiltration type'}), 400
+
+
+@app.route('/api/tools/anti-forensics')
+@login_required
+def api_anti_forensics():
+    """Get anti-forensics techniques"""
+    os_type = request.args.get('os')  # linux, windows
+    technique = request.args.get('technique')  # log_clear, timestamp
+    
+    if not os_type or os_type not in ['linux', 'windows']:
+        return jsonify({
+            'os_types': ['linux', 'windows'],
+            'techniques': ['log_clear', 'timestamp']
+        }), 400
+    
+    if technique == 'log_clear':
+        commands = AntiForensics.LOG_CLEARING.get(os_type, [])
+    elif technique == 'timestamp':
+        commands = [AntiForensics.TIMESTAMP_MANIPULATION.get(os_type)]
+    else:
+        commands = []
+    
+    return jsonify({
+        'os': os_type,
+        'technique': technique,
+        'commands': commands,
+        'warning': 'Illegal in most jurisdictions - Educational purposes only'
+    })
+
+
+@app.route('/api/tools/waf-bypass')
+@login_required
+def api_waf_bypass():
+    """Get WAF bypass techniques"""
+    technique = request.args.get('technique')  # encoding, case_variation, comment_injection, whitespace
+    
+    techniques = SecurityBypass.WAF_BYPASS
+    
+    if technique and technique in techniques:
+        return jsonify({
+            'technique': technique,
+            'methods': techniques[technique]
+        })
+    
+    return jsonify({
+        'available_techniques': list(techniques.keys()),
+        'all_techniques': techniques
     })
 
 

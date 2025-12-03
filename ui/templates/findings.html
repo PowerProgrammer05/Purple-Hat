@@ -1,37 +1,399 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Findings — PURPLE HAT</title>
-    <style>
-      body { background:#05030a; color:#f3e8ff; font-family:Inter, system-ui; padding:20px }
-      .wrap { max-width:1100px; margin:0 auto }
-      header { display:flex; align-items:center; justify-content:space-between }
-      .logo { font-family:monospace; color:#eac9ff; font-weight:800 }
-      .card { background:linear-gradient(180deg,#120018,#240032); padding:12px; border-radius:8px; margin-top:14px }
-      pre { background:#07020a; padding:10px; border-radius:8px; overflow:auto }
-      a { color:#c9b2ff; }
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <header>
-        <div class="logo">PURPLE HAT — Findings</div>
-        <div><a href="/dashboard">← Back to Dashboard</a></div>
-      </header>
+{% extends "base.html" %}
 
-      {% if not items %}
-      <div class="card">No findings yet.</div>
-      {% else %}
-        {% for i, it in enumerate(items) %}
-          <div class="card">
-            <strong>[{{ i }}] {{ it.type|upper }} — {{ it.target }}</strong>
-            <div style="margin-top:8px; font-size:13px">Preview (JSON):</div>
-            <pre>{{ it|tojson(indent=2) }}</pre>
-            <div style="margin-top:8px"><a href="/result/{{ i }}">View full</a></div>
-          </div>
-        {% endfor %}
-      {% endif %}
+{% block title %}Findings - PURPLE HAT{% endblock %}
+
+{% block content %}
+<div class="findings-container">
+    <div class="page-header">
+        <h1>🔍 Vulnerabilities Found</h1>
+        <div class="filter-controls">
+            <select id="typeFilter" class="filter-select">
+                <option value="">All Types</option>
+                <option value="SQL Injection">SQL Injection</option>
+                <option value="XSS">XSS (Cross-Site Scripting)</option>
+                <option value="Command Injection">Command Injection</option>
+                <option value="CSRF">CSRF</option>
+                <option value="XXE">XXE</option>
+                <option value="Other">Other</option>
+            </select>
+            <select id="severityFilter" class="filter-select">
+                <option value="">All Severities</option>
+                <option value="Critical">🔴 Critical</option>
+                <option value="High">🟠 High</option>
+                <option value="Medium">🟡 Medium</option>
+                <option value="Low">🟢 Low</option>
+            </select>
+        </div>
     </div>
-  </body>
-</html>
+
+    {% if findings %}
+    <div class="findings-grid">
+        {% for finding in findings %}
+        <div class="finding-card finding-{{ finding.severity | lower }}">
+            <div class="finding-header">
+                <span class="severity-badge severity-{{ finding.severity | lower }}">
+                    {{ finding.severity }}
+                </span>
+                <span class="type-badge">{{ finding.finding_type }}</span>
+            </div>
+
+            <div class="finding-content">
+                <div class="finding-target">
+                    <strong>Target:</strong> {{ finding.target or 'Unknown' }}
+                </div>
+
+                {% if finding.payload %}
+                <div class="finding-payload">
+                    <strong>Payload:</strong>
+                    <code>{{ finding.payload[:100] }}{% if finding.payload|length > 100 %}...{% endif %}</code>
+                </div>
+                {% endif %}
+
+                {% if finding.remediation %}
+                <div class="finding-remediation">
+                    <strong>🛠️ Remediation:</strong>
+                    <p>{{ finding.remediation }}</p>
+                </div>
+                {% endif %}
+
+                <div class="finding-meta">
+                    <small>Found: {{ finding.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                </div>
+            </div>
+
+            <div class="finding-actions">
+                <button class="btn-small btn-copy" onclick="copyPayload('{{ finding.payload }}')">Copy Payload</button>
+                <button class="btn-small btn-details" onclick="showDetails({{ finding.id }})">Details</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('findings', page=pagination.prev_num) }}" class="page-link">← Previous</a>
+        {% endif %}
+
+        {% for page_num in pagination.iter_pages() %}
+            {% if page_num %}
+                {% if page_num == pagination.page %}
+                <span class="page-link active">{{ page_num }}</span>
+                {% else %}
+                <a href="{{ url_for('findings', page=page_num) }}" class="page-link">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+            <span class="page-link disabled">...</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+        <a href="{{ url_for('findings', page=pagination.next_num) }}" class="page-link">Next →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">✨</div>
+        <h2>No Vulnerabilities Found</h2>
+        <p>Great! Your systems are secure so far. Keep running regular security scans.</p>
+        <a href="{{ url_for('new_scan') }}" class="btn btn-primary">Start New Scan</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.findings-container {
+    animation: slideIn 0.4s ease-out;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.page-header h1 {
+    color: var(--danger);
+    font-size: 2rem;
+    margin: 0;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 0.5rem 1rem;
+    background: rgba(26, 31, 58, 0.8);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 4px;
+    cursor: pointer;
+    min-width: 150px;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(139, 0, 255, 0.2);
+}
+
+.findings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.finding-card {
+    background: rgba(26, 31, 58, 0.7);
+    border-left: 4px solid;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.finding-critical {
+    border-left-color: #FF0055;
+}
+
+.finding-high {
+    border-left-color: #FF6600;
+}
+
+.finding-medium {
+    border-left-color: #FFB400;
+}
+
+.finding-low {
+    border-left-color: #00FF88;
+}
+
+.finding-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(139, 0, 255, 0.2);
+}
+
+.finding-header {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.severity-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.severity-critical {
+    background: rgba(255, 0, 85, 0.2);
+    color: #FF0055;
+    border: 1px solid #FF0055;
+}
+
+.severity-high {
+    background: rgba(255, 102, 0, 0.2);
+    color: #FF6600;
+    border: 1px solid #FF6600;
+}
+
+.severity-medium {
+    background: rgba(255, 180, 0, 0.2);
+    color: #FFB400;
+    border: 1px solid #FFB400;
+}
+
+.severity-low {
+    background: rgba(0, 255, 136, 0.2);
+    color: #00FF88;
+    border: 1px solid #00FF88;
+}
+
+.type-badge {
+    padding: 0.35rem 0.75rem;
+    background: rgba(139, 0, 255, 0.2);
+    color: var(--secondary);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    border: 1px solid var(--primary);
+}
+
+.finding-content {
+    flex: 1;
+}
+
+.finding-target {
+    padding: 0.75rem;
+    background: rgba(5, 8, 15, 0.5);
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.finding-target strong {
+    color: var(--secondary);
+}
+
+.finding-payload {
+    padding: 0.75rem;
+    background: rgba(5, 8, 15, 0.5);
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.finding-payload strong {
+    color: var(--secondary);
+}
+
+.finding-payload code {
+    display: block;
+    color: var(--danger);
+    margin-top: 0.5rem;
+    word-break: break-all;
+    font-family: 'Courier New', monospace;
+}
+
+.finding-remediation {
+    padding: 1rem;
+    background: rgba(0, 255, 136, 0.1);
+    border-left: 3px solid var(--success);
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+}
+
+.finding-remediation strong {
+    color: var(--success);
+}
+
+.finding-remediation p {
+    margin: 0.5rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.finding-meta {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.finding-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+}
+
+.btn-copy {
+    background: rgba(139, 0, 255, 0.2);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.btn-copy:hover {
+    background: rgba(139, 0, 255, 0.3);
+}
+
+.btn-details {
+    background: rgba(0, 212, 255, 0.2);
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+}
+
+.btn-details:hover {
+    background: rgba(0, 212, 255, 0.3);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: rgba(26, 31, 58, 0.5);
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h2 {
+    color: var(--secondary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .findings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .finding-actions {
+        flex-direction: column;
+    }
+
+    .btn-small {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+function copyPayload(payload) {
+    navigator.clipboard.writeText(payload).then(() => {
+        alert('Payload copied to clipboard!');
+    });
+}
+
+function showDetails(findingId) {
+    // Implement modal to show full details
+    alert('Finding details view coming soon!');
+}
+
+document.getElementById('typeFilter')?.addEventListener('change', function() {
+    const type = this.value;
+    if (type) {
+        window.location.href = `{{ url_for('findings') }}?type=${type}`;
+    }
+});
+
+document.getElementById('severityFilter')?.addEventListener('change', function() {
+    const severity = this.value;
+    if (severity) {
+        window.location.href = `{{ url_for('findings') }}?severity=${severity}`;
+    }
+});
+</script>
+{% endblock %}

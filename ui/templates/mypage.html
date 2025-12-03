@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card profile-card">
+                <div class="card-header">
+                    <h3>{{ user.username }}'s Profile</h3>
+                    <p class="muted">Member since: {{ stats.member_since.strftime('%Y-%m-%d') }}</p>
+                </div>
+                <div class="card-body">
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Full Name:</strong> {{ user.full_name or 'Not set' }}</p>
+                    <a href="{{ url_for('settings') }}" class="btn btn-primary">Edit Settings</a>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header"><h4>Quick Stats</h4></div>
+                <div class="card-body">
+                    <p><strong>Total Scans:</strong> {{ stats.total_scans }}</p>
+                    <p><strong>Total Findings:</strong> {{ stats.total_findings }}</p>
+                    <p><strong>Critical:</strong> {{ stats.critical_findings }}</p>
+                    <p><strong>High:</strong> {{ stats.high_findings }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Recent Scans</h3>
+                </div>
+                <div class="card-body">
+                    {% if stats.recent_scans %}
+                    <ul class="list-unstyled">
+                        {% for scan in stats.recent_scans %}
+                        <li>
+                            <div class="scan-item">
+                                <strong>#{{ scan.id }}</strong> {{ scan.target }} <span class="badge">{{ scan.status }}</span>
+                                <div class="muted">Mode: {{ scan.mode }} | Started: {{ scan.started_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                <a href="{{ url_for('scan_detail', scan_id=scan.id) }}" class="btn btn-sm btn-info">View</a>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p>No recent scans found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header"><h3>Account Actions</h3></div>
+                <div class="card-body">
+                    <a href="{{ url_for('settings') }}" class="btn btn-secondary">Edit Profile / Settings</a>
+                    <a href="{{ url_for('scans') }}" class="btn btn-secondary">View All Scans</a>
+                    <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-card .card-header {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    color: white;
+}
+
+.muted {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.scan-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.badge {
+    padding: 3px 8px;
+    background: #f0ad4e;
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}

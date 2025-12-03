@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome — PURPLE HAT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root{
+            --bg1: #0f0c29;
+            --bg2: #302b63;
+            --accent1: #9d00ff;
+            --accent2: #00f0ff;
+        }
+        html,body{height:100%;margin:0}
+        body{
+            display:flex;align-items:center;justify-content:center; background: linear-gradient(135deg,var(--bg1),var(--bg2));
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+            color:#fff;overflow:hidden
+        }
+        .splash-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column}
+        .neon-box{
+            display:flex;flex-direction:column;align-items:center;gap:18px;padding:50px;border-radius:14px;
+            box-shadow: 0 0 60px rgba(157,0,255,0.12), inset 0 1px 0 rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.04);
+            position:relative;backdrop-filter: blur(2px);
+            transform: translateZ(0);
+        }
+        .logo-mark{font-size:72px;animation:glow 2.6s ease-in-out infinite, drift 8s ease-in-out infinite;text-shadow:0 0 30px rgba(157,0,255,0.6);} 
+        .title{font-weight:800;font-size:40px;letter-spacing:2px;background:linear-gradient(90deg,var(--accent1),var(--accent2));-webkit-background-clip:text;color:transparent}
+        .subtitle{font-size:14px;color:rgba(255,255,255,0.65);}
+
+        .cyber-lines{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+        .cyber-lines::before,.cyber-lines::after{content:'';position:absolute;height:1px;width:220%;left:-10%;top:25%;background:linear-gradient(90deg, transparent, rgba(0,240,255,0.08), transparent);transform:skewX(-15deg);filter:blur(3px);opacity:0.9}
+        .cyber-lines::after{top:75%;background:linear-gradient(90deg, transparent, rgba(157,0,255,0.06), transparent);opacity:0.6}
+
+        .grid{display:grid;grid-template-columns:repeat(6,26px);grid-gap:6px;transform:translateY(20px);opacity:0;animation:reveal 1.2s 0.45s cubic-bezier(.2,.8,.2,1) forwards}
+        .grid span{height:8px;background:linear-gradient(90deg,#0ff,#9d00ff);opacity:0.25;border-radius:3px;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))}
+
+        .progress{width:320px;height:8px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,0.025),rgba(255,255,255,0.015));overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02)}
+        .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));animation:bar-grow 2.6s linear forwards}
+
+        @keyframes bar-grow{from{width:0}% to{width:100%}}
+        @keyframes reveal{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes glow{0%{text-shadow:0 0 8px rgba(157,0,255,0.28)}50%{text-shadow:0 0 36px rgba(0,240,255,0.9)}100%{text-shadow:0 0 8px rgba(157,0,255,0.28)}}
+        @keyframes drift{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+
+        .version{position:absolute;right:18px;bottom:18px;color:rgba(255,255,255,0.35);font-size:12px}
+
+        .footer-note{margin-top:18px;color:rgba(255,255,255,0.45);font-size:12px}
+
+        /* responsive */
+        @media (max-width:640px){.neon-box{padding:22px}.title{font-size:28px}.logo-mark{font-size:44px}}
+    </style>
+</head>
+<body>
+    <div class="splash-wrap">
+        <div class="neon-box">
+            <div class="logo-mark">🎭</div>
+            <div class="title">WELCOME TO PURPLE HAT</div>
+            <div class="subtitle">Professional Security Testing — Loading modules…</div>
+            <div class="grid" id="grid">
+                {% for i in range(18) %}
+                <span style="opacity:{{ (i % 6 + 1) / 12 }}"></span>
+                {% endfor %}
+            </div>
+            <div style="height:14px"></div>
+
+            <div class="progress">
+                <div class="bar"></div>
+            </div>
+
+            <div class="footer-note">Initializing UI &amp; Database — Preparing professional tools</div>
+            <div class="cyber-lines"></div>
+        </div>
+        <div class="version">v2.0.0</div>
+    </div>
+
+    <script>
+        // After animation completes, navigate to /login
+        const redirectDelay = 2600; // matches bar-grow duration
+        setTimeout(() => {
+            // Gracefully navigate to login
+            window.location.href = '/login';
+        }, redirectDelay + 350);
+    </script>
+</body>
+</html>

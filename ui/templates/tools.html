@@ -1,0 +1,679 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="title">🔧 Advanced Tools & Exploits</h1>
+            <p class="subtitle">Professional-grade security testing utilities</p>
+        </div>
+    </div>
+
+    <!-- Tools Navigation -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="nav-tabs-custom">
+                <button class="nav-tab-btn active" data-tool="reverse-shell">
+                    <i class="fas fa-arrow-right"></i> Reverse Shells
+                </button>
+                <button class="nav-tab-btn" data-tool="webshell">
+                    <i class="fas fa-globe"></i> Web Shells
+                </button>
+                <button class="nav-tab-btn" data-tool="payloads">
+                    <i class="fas fa-bomb"></i> Payloads
+                </button>
+                <button class="nav-tab-btn" data-tool="escalation">
+                    <i class="fas fa-arrow-up"></i> Privilege Escalation
+                </button>
+                <button class="nav-tab-btn" data-tool="encoder">
+                    <i class="fas fa-code"></i> Encoders
+                </button>
+                <button class="nav-tab-btn" data-tool="exfil">
+                    <i class="fas fa-download"></i> Data Exfiltration
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reverse Shell Tool -->
+    <div id="reverse-shell" class="tool-section active">
+        <div class="card">
+            <div class="card-header">
+                <h3>🎯 Reverse Shell Generator</h3>
+                <p class="description">Generate reverse shell payloads for various platforms</p>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Attacker IP Address:</label>
+                    <input type="text" id="reverse-shell-ip" class="form-control" placeholder="192.168.1.100" value="">
+                </div>
+
+                <div class="form-group">
+                    <label>Attacker Port:</label>
+                    <input type="number" id="reverse-shell-port" class="form-control" placeholder="4444" min="1" max="65535" value="">
+                </div>
+
+                <div class="form-group">
+                    <label>Shell Type:</label>
+                    <select id="reverse-shell-type" class="form-control">
+                        <option value="bash">Bash</option>
+                        <option value="python">Python</option>
+                        <option value="nc">Netcat</option>
+                        <option value="powershell">PowerShell (Windows)</option>
+                        <option value="perl">Perl</option>
+                        <option value="php">PHP</option>
+                        <option value="ruby">Ruby</option>
+                        <option value="jsp">JSP</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" onclick="generateReverseShell()">
+                    <i class="fas fa-magic"></i> Generate Payload
+                </button>
+
+                <div id="reverse-shell-result" class="result-box" style="display: none;">
+                    <div class="result-header">
+                        <h4>Generated Payload</h4>
+                        <button class="btn btn-sm btn-info" onclick="copyToClipboard('reverse-shell-payload')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre id="reverse-shell-payload" class="code-block"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Web Shell Tool -->
+    <div id="webshell" class="tool-section">
+        <div class="card">
+            <div class="card-header">
+                <h3>🕷️ Web Shell Generator</h3>
+                <p class="description">Generate web shells for file upload exploitation</p>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Shell Type:</label>
+                    <select id="webshell-type" class="form-control">
+                        <option value="php_simple">PHP Simple Shell</option>
+                        <option value="php_advanced">PHP Advanced Shell</option>
+                        <option value="aspx">ASP.NET Shell</option>
+                        <option value="jsp">JSP Shell</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" onclick="generateWebShell()">
+                    <i class="fas fa-magic"></i> Generate Shell
+                </button>
+
+                <div id="webshell-result" class="result-box" style="display: none;">
+                    <div class="result-header">
+                        <h4>Generated Web Shell</h4>
+                        <div class="button-group">
+                            <button class="btn btn-sm btn-info" onclick="copyToClipboard('webshell-code')">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="downloadWebShell()">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
+                    </div>
+                    <pre id="webshell-code" class="code-block"></pre>
+                    <p id="webshell-ext" class="extension-info"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payload Tool -->
+    <div id="payloads" class="tool-section">
+        <div class="card">
+            <div class="card-header">
+                <h3>💣 Exploit Payloads</h3>
+                <p class="description">Common exploitation payloads for various vulnerability types</p>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Payload Type:</label>
+                    <select id="payload-type" class="form-control">
+                        <option value="sql">SQL Injection</option>
+                        <option value="xss">Cross-Site Scripting (XSS)</option>
+                        <option value="cmd">Command Injection</option>
+                        <option value="traversal">Path Traversal</option>
+                        <option value="xxe">XML External Entity (XXE)</option>
+                        <option value="ldap">LDAP Injection</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" onclick="getPayloads()">
+                    <i class="fas fa-list"></i> Get Payloads
+                </button>
+
+                <div id="payloads-result" class="result-box" style="display: none;">
+                    <div class="result-header">
+                        <h4 id="payloads-title">Payloads</h4>
+                    </div>
+                    <div id="payloads-list" class="payloads-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privilege Escalation Tool -->
+    <div id="escalation" class="tool-section">
+        <div class="card">
+            <div class="card-header">
+                <h3>⬆️ Privilege Escalation</h3>
+                <p class="description">Techniques and payloads for privilege escalation</p>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Operating System:</label>
+                    <select id="escalation-os" class="form-control" onchange="updateEscalationMethods()">
+                        <option value="">Select OS...</option>
+                        <option value="linux">Linux</option>
+                        <option value="windows">Windows</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Method:</label>
+                    <select id="escalation-method" class="form-control">
+                        <option value="sudo">Sudo Abuse</option>
+                        <option value="suid">SUID Binaries</option>
+                        <option value="capabilities">Linux Capabilities</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" onclick="getEscalationPayloads()">
+                    <i class="fas fa-arrow-up"></i> Get Techniques
+                </button>
+
+                <div id="escalation-result" class="result-box" style="display: none;">
+                    <div class="result-header">
+                        <h4>Escalation Techniques</h4>
+                    </div>
+                    <div id="escalation-list" class="payloads-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Encoder Tool -->
+    <div id="encoder" class="tool-section">
+        <div class="card">
+            <div class="card-header">
+                <h3>🔐 Payload Encoder</h3>
+                <p class="description">Encode payloads to bypass security filters</p>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Original Payload:</label>
+                    <textarea id="encoder-payload" class="form-control" rows="3" placeholder="Enter payload to encode..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Encoding Method:</label>
+                    <select id="encoder-type" class="form-control">
+                        <option value="url">URL Encode</option>
+                        <option value="double_url">Double URL Encode</option>
+                        <option value="base64">Base64 Encode</option>
+                        <option value="hex">Hex Encode</option>
+                        <option value="unicode">Unicode Encode</option>
+                        <option value="html">HTML Entity Encode</option>
+                        <option value="mixed_case">Mixed Case</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" onclick="encodePayload()">
+                    <i class="fas fa-lock"></i> Encode
+                </button>
+
+                <div id="encoder-result" class="result-box" style="display: none;">
+                    <div class="result-header">
+                        <h4>Encoded Payload</h4>
+                        <button class="btn btn-sm btn-info" onclick="copyToClipboard('encoder-encoded')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre id="encoder-encoded" class="code-block"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Exfiltration Tool -->
+    <div id="exfil" class="tool-section">
+        <div class="card">
+            <div class="card-header">
+                <h3>📥 Data Exfiltration</h3>
+                <p class="description">Generate data exfiltration payloads</p>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Data to Exfiltrate:</label>
+                    <textarea id="exfil-data" class="form-control" rows="2" placeholder="Data to exfiltrate..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Exfiltration Method:</label>
+                    <select id="exfil-type" class="form-control">
+                        <option value="dns">DNS Tunneling</option>
+                        <option value="http">HTTP Requests</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label id="exfil-domain-label">Domain/Server:</label>
+                    <input type="text" id="exfil-domain" class="form-control" placeholder="attacker.com">
+                </div>
+
+                <button class="btn btn-primary" onclick="generateExfil()">
+                    <i class="fas fa-download"></i> Generate
+                </button>
+
+                <div id="exfil-result" class="result-box" style="display: none;">
+                    <div class="result-header">
+                        <h4>Exfiltration Queries</h4>
+                    </div>
+                    <div id="exfil-list" class="payloads-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warning Message -->
+    <div class="alert alert-warning mt-5">
+        <strong>⚠️ Legal Warning:</strong> These tools are provided for authorized security testing and educational purposes only. 
+        Unauthorized access to computer systems is illegal. Always obtain proper authorization before conducting security assessments.
+    </div>
+</div>
+
+<style>
+.tool-section {
+    display: none;
+}
+
+.tool-section.active {
+    display: block;
+}
+
+.nav-tabs-custom {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.nav-tab-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.nav-tab-btn:hover,
+.nav-tab-btn.active {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    margin: -10px -10px 20px -10px;
+}
+
+.card-header h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.5rem;
+}
+
+.description {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+.result-box {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.result-header h4 {
+    margin: 0;
+    color: #333;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+}
+
+.code-block {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.payloads-list {
+    display: grid;
+    gap: 10px;
+}
+
+.payload-item {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 12px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.payload-item code {
+    flex: 1;
+    background: #f5f5f5;
+    padding: 8px;
+    border-radius: 3px;
+    font-size: 0.9rem;
+    overflow-x: auto;
+    margin-right: 10px;
+}
+
+.payload-item button {
+    white-space: nowrap;
+}
+
+.extension-info {
+    margin-top: 10px;
+    padding: 10px;
+    background: #fff3cd;
+    border-radius: 5px;
+    color: #856404;
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+    color: #333;
+}
+
+.form-control {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.title {
+    color: #333;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 1.1rem;
+    margin: 0;
+}
+</style>
+
+<script>
+// Tool Navigation
+document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tool = this.dataset.tool;
+        
+        // Hide all sections
+        document.querySelectorAll('.tool-section').forEach(s => s.classList.remove('active'));
+        // Show selected section
+        document.getElementById(tool).classList.add('active');
+        
+        // Update button state
+        document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
+
+// Reverse Shell
+function generateReverseShell() {
+    const ip = document.getElementById('reverse-shell-ip').value;
+    const port = document.getElementById('reverse-shell-port').value;
+    const type = document.getElementById('reverse-shell-type').value;
+    
+    if (!ip || !port) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    fetch(`/api/tools/reverse-shell?ip=${ip}&port=${port}&type=${type}`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('reverse-shell-payload').textContent = data.payload;
+            document.getElementById('reverse-shell-result').style.display = 'block';
+        });
+}
+
+// Web Shell
+function generateWebShell() {
+    const type = document.getElementById('webshell-type').value;
+    
+    fetch(`/api/tools/webshell?type=${type}`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('webshell-code').textContent = data.code;
+            document.getElementById('webshell-ext').innerHTML = `<strong>File Extension:</strong> ${data.extension}`;
+            document.getElementById('webshell-result').style.display = 'block';
+        });
+}
+
+function downloadWebShell() {
+    const code = document.getElementById('webshell-code').textContent;
+    const type = document.getElementById('webshell-type').value;
+    const ext = {
+        'php_simple': '.php',
+        'php_advanced': '.php',
+        'aspx': '.aspx',
+        'jsp': '.jsp'
+    }[type];
+    
+    const blob = new Blob([code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shell${ext}`;
+    a.click();
+}
+
+// Payloads
+function getPayloads() {
+    const type = document.getElementById('payload-type').value;
+    
+    fetch(`/api/tools/exploit-payloads?type=${type}`)
+        .then(r => r.json())
+        .then(data => {
+            const list = data.payloads.map(p => `
+                <div class="payload-item">
+                    <code>${p}</code>
+                    <button class="btn btn-sm btn-info" onclick="navigator.clipboard.writeText('${p.replace(/'/g, "\\'")}')">Copy</button>
+                </div>
+            `).join('');
+            
+            document.getElementById('payloads-title').textContent = `${type.toUpperCase()} Payloads (${data.count})`;
+            document.getElementById('payloads-list').innerHTML = list;
+            document.getElementById('payloads-result').style.display = 'block';
+        });
+}
+
+// Privilege Escalation
+function updateEscalationMethods() {
+    const os = document.getElementById('escalation-os').value;
+    const methods = {
+        'linux': ['sudo', 'suid', 'capabilities'],
+        'windows': ['uac_bypass', 'privilege_check']
+    }[os] || [];
+    
+    const select = document.getElementById('escalation-method');
+    select.innerHTML = methods.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+function getEscalationPayloads() {
+    const os = document.getElementById('escalation-os').value;
+    const method = document.getElementById('escalation-method').value;
+    
+    if (!os) {
+        alert('Please select an OS');
+        return;
+    }
+    
+    fetch(`/api/tools/privilege-escalation?os=${os}&method=${method}`)
+        .then(r => r.json())
+        .then(data => {
+            const list = data.payloads.map(p => `
+                <div class="payload-item">
+                    <code>${p}</code>
+                    <button class="btn btn-sm btn-info" onclick="navigator.clipboard.writeText('${p.replace(/'/g, "\\'")}')">Copy</button>
+                </div>
+            `).join('');
+            
+            document.getElementById('escalation-list').innerHTML = list;
+            document.getElementById('escalation-result').style.display = 'block';
+        });
+}
+
+// Encoder
+function encodePayload() {
+    const payload = document.getElementById('encoder-payload').value;
+    const type = document.getElementById('encoder-type').value;
+    
+    if (!payload) {
+        alert('Please enter a payload');
+        return;
+    }
+    
+    fetch(`/api/tools/payload-encoder?payload=${encodeURIComponent(payload)}&encoding=${type}`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('encoder-encoded').textContent = data.encoded;
+            document.getElementById('encoder-result').style.display = 'block';
+        });
+}
+
+// Data Exfiltration
+function generateExfil() {
+    const data = document.getElementById('exfil-data').value;
+    const type = document.getElementById('exfil-type').value;
+    const domain = document.getElementById('exfil-domain').value;
+    
+    if (!data || !domain) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    fetch(`/api/tools/data-exfiltration?data=${encodeURIComponent(data)}&type=${type}&domain=${domain}`)
+        .then(r => r.json())
+        .then(data => {
+            const list = data.queries.map(q => `
+                <div class="payload-item">
+                    <code>${q}</code>
+                    <button class="btn btn-sm btn-info" onclick="navigator.clipboard.writeText('${q.replace(/'/g, "\\'")}')">Copy</button>
+                </div>
+            `).join('');
+            
+            document.getElementById('exfil-list').innerHTML = `
+                ${list}
+                <p style="margin-top: 10px; color: #666;">Total queries: ${data.total}</p>
+            `;
+            document.getElementById('exfil-result').style.display = 'block';
+        });
+}
+
+// Copy to Clipboard
+function copyToClipboard(elementId) {
+    const text = document.getElementById(elementId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Copied to clipboard!');
+    });
+}
+</script>
+{% endblock %}

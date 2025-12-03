@@ -16,10 +16,14 @@
             </div>
             <nav>
                 <a href="{{ url_for('dashboard') }}">Dashboard</a>
-                <a href="{{ url_for('scan') }}">Scan</a>
-                <a href="{{ url_for('results') }}">Results</a>
+                <a href="{{ url_for('new_scan') }}">New Scan</a>
+                <a href="{{ url_for('scans') }}">Scans</a>
+                <a href="{{ url_for('findings') }}">Findings</a>
+                <a href="{{ url_for('reports') }}">Reports</a>
+                <a href="{{ url_for('tools') }}">Tools</a>
                 <a href="{{ url_for('settings') }}">Settings</a>
-                <a href="{{ url_for('logout') }}">Logout</a>
+                <a href="{{ url_for('mypage') }}">My Page</a>
+                <a href="{{ url_for('logout') }}" class="logout">Logout</a>
             </nav>
         </div>
     </header>
@@ -40,9 +44,9 @@
         <p>&copy; 2025 PURPLE HAT - Modern Security Testing Framework</p>
         <p>Version 2.0.0 | Designed for Security Professionals</p>
         <div class="footer-links">
-            <a href="#">Documentation</a>
-            <a href="#">GitHub</a>
-            <a href="#">Issues</a>
+            <a href="{{ url_for('docs_index') }}">Documentation</a>
+            <a href="https://github.com/PowerProgrammer05/Purple-Hat" target="_blank">GitHub</a>
+            <a href="https://github.com/PowerProgrammer05/Purple-Hat/issues" target="_blank">Issues</a>
         </div>
     </footer>
 

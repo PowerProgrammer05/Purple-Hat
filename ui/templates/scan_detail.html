@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Details - PURPLE HAT{% endblock %}
+
+{% block content %}
+<div class="scan-detail-container">
+    <div class="detail-header">
+        <div>
+            <h1>{{ scan.target }}</h1>
+            <p class="breadcrumb"><a href="{{ url_for('scans') }}">← Back to Scans</a></p>
+        </div>
+        <div class="header-status">
+            <span class="status-badge status-{{ scan.status }}">{{ scan.status | title }}</span>
+        </div>
+    </div>
+
+    <div class="scan-info-grid">
+        <div class="info-card">
+            <div class="info-label">Mode</div>
+            <div class="info-value">
+                <span class="badge badge-{{ scan.mode }}">{{ scan.mode | replace('_', ' ') | title }}</span>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-label">Started</div>
+            <div class="info-value">{{ scan.started_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-label">Duration</div>
+            <div class="info-value">
+                {% if scan.duration %}
+                    {{ scan.duration | round(1) }} seconds
+                {% else %}
+                    <small>Still running...</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-label">Findings</div>
+            <div class="info-value finding-count">{{ findings | length }}</div>
+        </div>
+    </div>
+
+    {% if findings %}
+    <div class="findings-section">
+        <h2>Vulnerabilities Found</h2>
+        <div class="findings-list">
+            {% for finding in findings %}
+            <div class="finding-item finding-{{ finding.severity | lower }}">
+                <div class="finding-badge">
+                    <span class="severity-{{ finding.severity | lower }}">{{ finding.severity }}</span>
+                </div>
+                <div class="finding-details">
+                    <strong>{{ finding.finding_type }}</strong>
+                    {% if finding.target %}
+                    <div class="detail-row">
+                        <span class="label">Target:</span> {{ finding.target }}
+                    </div>
+                    {% endif %}
+                    {% if finding.payload %}
+                    <div class="detail-row">
+                        <span class="label">Payload:</span>
+                        <code>{{ finding.payload[:150] }}{% if finding.payload | length > 150 %}...{% endif %}</code>
+                    </div>
+                    {% endif %}
+                    {% if finding.remediation %}
+                    <div class="detail-row remediation">
+                        <span class="label">🛠️ Remediation:</span>
+                        <p>{{ finding.remediation }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="actions-section">
+        <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
+        <button class="btn btn-secondary" onclick="exportCsv()">📥 Export CSV</button>
+        <button class="btn btn-danger" onclick="deleteScan()">🗑️ Delete Scan</button>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">✨</div>
+        <h2>No Vulnerabilities Found</h2>
+        <p>This scan completed without finding any vulnerabilities.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.scan-detail-container {
+    animation: slideIn 0.4s ease-out;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border);
+}
+
+.detail-header h1 {
+    color: var(--secondary);
+    font-size: 2rem;
+    margin: 0 0 0.5rem;
+}
+
+.breadcrumb {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.breadcrumb a {
+    color: var(--secondary);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.header-status {
+    display: flex;
+    gap: 1rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-pending {
+    background: rgba(255, 180, 0, 0.2);
+    color: #FFB400;
+}
+
+.status-running {
+    background: rgba(0, 212, 255, 0.2);
+    color: var(--secondary);
+}
+
+.status-completed {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--success);
+}
+
+.status-failed {
+    background: rgba(255, 0, 85, 0.2);
+    color: var(--danger);
+}
+
+.scan-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.info-card {
+    background: rgba(26, 31, 58, 0.7);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.info-value {
+    color: var(--secondary);
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.finding-count {
+    font-size: 2rem;
+    text-align: center;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge-ready_to_go {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.badge-professional {
+    background: rgba(255, 180, 0, 0.2);
+    color: #FFB400;
+    border: 1px solid #FFB400;
+}
+
+.findings-section {
+    margin-bottom: 2rem;
+}
+
+.findings-section h2 {
+    color: var(--secondary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border);
+}
+
+.findings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.finding-item {
+    background: rgba(26, 31, 58, 0.7);
+    border-left: 4px solid;
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.finding-critical {
+    border-left-color: #FF0055;
+}
+
+.finding-high {
+    border-left-color: #FF6600;
+}
+
+.finding-medium {
+    border-left-color: #FFB400;
+}
+
+.finding-low {
+    border-left-color: #00FF88;
+}
+
+.finding-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 8px 20px rgba(139, 0, 255, 0.1);
+}
+
+.finding-badge {
+    flex-shrink: 0;
+}
+
+.severity-critical {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    background: rgba(255, 0, 85, 0.2);
+    color: #FF0055;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: 1px solid #FF0055;
+}
+
+.severity-high {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    background: rgba(255, 102, 0, 0.2);
+    color: #FF6600;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: 1px solid #FF6600;
+}
+
+.severity-medium {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    background: rgba(255, 180, 0, 0.2);
+    color: #FFB400;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: 1px solid #FFB400;
+}
+
+.severity-low {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    background: rgba(0, 255, 136, 0.2);
+    color: #00FF88;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: 1px solid #00FF88;
+}
+
+.finding-details {
+    flex: 1;
+}
+
+.finding-details strong {
+    color: var(--secondary);
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.detail-row {
+    margin: 0.75rem 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.detail-row .label {
+    color: var(--text);
+    font-weight: 500;
+}
+
+.detail-row code {
+    display: block;
+    background: rgba(5, 8, 15, 0.5);
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.25rem;
+    color: var(--danger);
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+}
+
+.detail-row.remediation {
+    background: rgba(0, 255, 136, 0.1);
+    padding: 0.75rem;
+    border-left: 3px solid var(--success);
+    border-radius: 4px;
+}
+
+.detail-row.remediation .label {
+    color: var(--success);
+}
+
+.detail-row.remediation p {
+    margin: 0.5rem 0 0;
+}
+
+.actions-section {
+    display: flex;
+    gap: 1rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), #7a00d4);
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 0, 255, 0.3);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(139, 0, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: rgba(0, 212, 255, 0.2);
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 212, 255, 0.3);
+}
+
+.btn-danger {
+    background: rgba(255, 0, 85, 0.2);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.btn-danger:hover {
+    background: rgba(255, 0, 85, 0.3);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: rgba(26, 31, 58, 0.5);
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h2 {
+    color: var(--secondary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .detail-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .detail-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .finding-item {
+        flex-direction: column;
+    }
+
+    .actions-section {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+function generateReport() {
+    alert('Report generation coming soon!');
+}
+
+function exportCsv() {
+    alert('CSV export coming soon!');
+}
+
+function deleteScan() {
+    if (confirm('Are you sure you want to delete this scan and all its findings?')) {
+        // Implement delete via API
+        alert('Delete functionality coming soon!');
+    }
+}
+</script>
+{% endblock %}

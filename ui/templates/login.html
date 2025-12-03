@@ -122,10 +122,20 @@
         .login-footer a {
             color: #00D4FF;
             text-decoration: none;
+            font-weight: 500;
         }
 
         .login-footer a:hover {
             text-decoration: underline;
+        }
+
+        .login-footer p {
+            margin: 0.75rem 0;
+        }
+
+        .login-footer p:first-child {
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #333;
         }
     </style>
 </head>
@@ -158,7 +168,6 @@
 
             <div class="login-footer">
                 <p>Don't have an account? <a href="{{ url_for('register') }}">Sign Up Here</a></p>
-                <p style="margin-top: 1rem; border-top: 1px solid #333; padding-top: 1rem;">Demo: <strong>admin</strong> / <strong>ADMIN1234</strong></p>
             </div>
         </div>
     </div>

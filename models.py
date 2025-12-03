@@ -81,7 +81,7 @@ class Finding(db.Model):
     target = db.Column(db.String(255))
     payload = db.Column(db.Text)
     response = db.Column(db.Text)
-    metadata = db.Column(db.JSON)
+    meta = db.Column(db.JSON)  # Changed from 'metadata' - reserved name in SQLAlchemy
     remediation = db.Column(db.Text)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
