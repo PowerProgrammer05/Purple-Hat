@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>PURPLE HAT — Dashboard</title>
+    <style>
+      body { background: radial-gradient(ellipse at top left, #0b0015, #03030a); color:#f8f4ff; font-family:Inter, system-ui, -apple-system; padding:28px }
+      .wrap { max-width:1100px; margin:0 auto }
+      header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px }
+      .logo { font-family:monospace; color:#dfc2ff; font-weight:800; font-size:22px }
+      .nav a { color:#bda8ff; margin-left:12px; text-decoration:none }
+      .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px }
+      .card { background:linear-gradient(180deg,#120018 0%, #240032 100%); padding:16px; border-radius:10px; border:1px solid rgba(255,255,255,0.04) }
+      input, textarea { width:100%; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:#05020a; color:#fff }
+      button { background:#8a57ff; border:0; color:white; padding:8px 12px; border-radius:8px; cursor:pointer }
+      label { color:#d6c7ff; font-size:12px }
+      .minor { color:#a696d6; font-size:12px }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="logo">PURPLE HAT — Automation</div>
+        <div class="nav">
+          <a href="/findings">Findings</a>
+          <a href="/logout">Logout</a>
+        </div>
+      </header>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Automated Workflow</h3>
+          <p class="minor">Run discovery + port scan + sqlmap + quick XSS attempts</p>
+          <form method="POST" action="/run">
+            <label>Target (URL or host)</label>
+            <input name="target" placeholder="https://example.com or 192.168.1.10" />
+            <label>Ports (optional)</label>
+            <input name="ports" placeholder="80,443,8080" />
+            <label>Threads</label>
+            <input name="threads" placeholder="8" />
+            <div style="margin-top:10px"><button type="submit">Start Workflow</button></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Port Scanner</h3>
+          <p class="minor">Scan ports and capture banner samples</p>
+          <form method="POST" action="/scan/ports">
+            <label>Host</label>
+            <input name="host" placeholder="example.com" />
+            <label>Ports (comma list, optional)</label>
+            <input name="ports" placeholder="80,443,8080" />
+            <label>Threads</label>
+            <input name="threads" placeholder="20" />
+            <div style="margin-top:10px"><button type="submit">Scan Ports</button></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>SQLMap (local)</h3>
+          <p class="minor">Run sqlmap using local copy and get a parsed summary</p>
+          <form method="POST" action="/scan/sqlmap">
+            <label>Target (or leave blank and use args)</label>
+            <input name="target" placeholder="https://example.com" />
+            <label>Custom args (optional)</label>
+            <input name="args" placeholder="-u https://target.com -p id --batch" />
+            <div style="margin-top:10px"><button type="submit">Run sqlmap</button></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>XSS Quickcheck</h3>
+          <p class="minor">Try a set of XSS payloads against a single param</p>
+          <form method="POST" action="/scan/xss">
+            <label>Target</label>
+            <input name="target" placeholder="https://example.com" />
+            <label>Param name (default q)</label>
+            <input name="param" placeholder="q" />
+            <div style="margin-top:10px"><button type="submit">Run XSS quickcheck</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

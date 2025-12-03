@@ -1,0 +1,74 @@
+{
+  "framework": {
+    "name": "PURPLE HAT",
+    "version": "1.0.0",
+    "description": "Modern Security Testing Framework"
+  },
+  "settings": {
+    "timeout": 5,
+    "retries": 3,
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "proxy_enabled": false,
+    "proxy_url": "http://127.0.0.1:8080",
+    "verify_ssl": true
+  },
+  "modules": {
+    "enabled": [
+      "injection.sql",
+      "injection.command",
+      "injection.ldap",
+      "injection.xpath",
+      "web_security.xss",
+      "web_security.csrf",
+      "web_security.file_upload",
+      "web_security.xxe",
+      "web_security.auth",
+      "web_security.ssl_tls",
+      "web_security.headers",
+      "encoding.encoder",
+      "network.scanner",
+      "network.dns",
+      "network.recon",
+      "network.proxy"
+    ]
+  },
+  "payloads": {
+    "sql_injection": {
+      "union_based": true,
+      "time_based": true,
+      "boolean_based": true,
+      "error_based": true,
+      "stacked": true
+    },
+    "xss": {
+      "reflected": true,
+      "stored": true,
+      "dom_based": true
+    },
+    "encoding_methods": [
+      "base64",
+      "url",
+      "hex",
+      "html",
+      "unicode",
+      "rot13",
+      "caesar"
+    ]
+  },
+  "network": {
+    "ports_to_scan": [
+      21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3306, 5432, 5984, 6379, 8080, 8443, 9200, 27017
+    ],
+    "timeout": 2,
+    "threads": 1
+  }
+  ,
+  "tools": {
+    "sqlmap_path": null
+  }
+  ,
+  "webui": {
+    "user": "ADMIN",
+    "password": "ton20080514@"
+  }
+}
