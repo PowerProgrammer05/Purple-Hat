@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section">
+    <h1>Security Scanning Interface</h1>
+
+    <div class="mode-selector" id="modeSelector">
+        <!-- Modes will be loaded dynamically -->
+    </div>
+
+    <div id="configPanel" class="card" style="display: none;">
+        <div class="card-title">Scanning Configuration</div>
+        
+        <div class="form-group">
+            <label for="target">Target URL or Host *</label>
+            <input type="text" id="target" placeholder="https://example.com or 192.168.1.1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="modules">Modules to Run</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <label><input type="checkbox" name="modules" value="sql_injection" checked> SQL Injection</label>
+                <label><input type="checkbox" name="modules" value="xss" checked> XSS Detection</label>
+                <label><input type="checkbox" name="modules" value="command_injection"> Command Injection</label>
+                <label><input type="checkbox" name="modules" value="port_scanner" checked> Port Scanner</label>
+                <label><input type="checkbox" name="modules" value="ssl_analysis"> SSL/TLS Analysis</label>
+                <label><input type="checkbox" name="modules" value="auth_testing"> Auth Testing</label>
+            </div>
+        </div>
+
+        <div class="form-group" id="advancedOptions" style="display: none;">
+            <label for="timeout">Timeout (seconds)</label>
+            <input type="number" id="timeout" value="5" min="1" max="60">
+
+            <label for="threads" style="margin-top: 1rem;">Thread Count</label>
+            <input type="number" id="threads" value="10" min="1" max="100">
+
+            <label for="portRange" style="margin-top: 1rem;">Port Range</label>
+            <input type="text" id="portRange" placeholder="1-1000 or 80,443,8080">
+
+            <label for="retries" style="margin-top: 1rem;">Retries</label>
+            <input type="number" id="retries" value="2" min="0" max="10">
+        </div>
+
+        <button type="button" id="startScan" class="btn btn-primary" style="margin-top: 1.5rem;">Start Scan</button>
+    </div>
+
+    <div id="scanProgress" style="display: none;">
+        <div class="card">
+            <div class="card-title">Scan Progress</div>
+            <div id="progressContainer">
+                <div class="progress">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                </div>
+                <p id="progressText" style="color: #888; font-size: 0.9rem;">Starting scan...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .section {
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Mode selection and scanning interface
+    const API_BASE = '/api';
+    let selectedMode = null;
+    let scanInProgress = false;
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadModes();
+        setupEventListeners();
+    });
+
+    async function loadModes() {
+        try {
+            const response = await fetch(`${API_BASE}/config/modes`);
+            const data = await response.json();
+            displayModes(data.modes);
+        } catch (error) {
+            console.error('Error loading modes:', error);
+            showError('Failed to load scanning modes');
+        }
+    }
+
+    function displayModes(modes) {
+        const selector = document.getElementById('modeSelector');
+        selector.innerHTML = '';
+
+        modes.forEach(mode => {
+            const card = document.createElement('div');
+            card.className = 'mode-card';
+            card.innerHTML = `
+                <h3>${mode.name}</h3>
+                <p class="mode-description">${mode.description}</p>
+                <ul class="mode-features">
+                    ${mode.features.map(f => `<li>${f}</li>`).join('')}
+                </ul>
+            `;
+            card.addEventListener('click', () => selectMode(mode, card));
+            selector.appendChild(card);
+        });
+    }
+
+    async function selectMode(mode, cardElement) {
+        selectedMode = mode;
+        
+        // Update UI
+        document.querySelectorAll('.mode-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        cardElement.classList.add('active');
+
+        // Show config panel and advanced options for professional mode
+        document.getElementById('configPanel').style.display = 'block';
+        const advancedOptions = document.getElementById('advancedOptions');
+        advancedOptions.style.display = mode.id === 'professional' ? 'block' : 'none';
+
+        // Set config values
+        if (mode.config) {
+            document.getElementById('timeout').value = mode.config.timeout;
+            document.getElementById('threads').value = mode.config.sql_injection_threads;
+            document.getElementById('portRange').value = mode.config.port_scan_range;
+        }
+
+        // Set mode on server
+        try {
+            await fetch(`${API_BASE}/config/set-mode`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: mode.id })
+            });
+        } catch (error) {
+            console.error('Error setting mode:', error);
+        }
+    }
+
+    function setupEventListeners() {
+        document.getElementById('startScan').addEventListener('click', startScan);
+    }
+
+    async function startScan() {
+        const target = document.getElementById('target').value;
+        if (!target) {
+            showError('Please enter a target URL or host');
+            return;
+        }
+
+        const modules = Array.from(document.querySelectorAll('input[name="modules"]:checked'))
+            .map(el => el.value);
+
+        scanInProgress = true;
+        document.getElementById('configPanel').style.display = 'none';
+        document.getElementById('scanProgress').style.display = 'block';
+
+        try {
+            const response = await fetch(`${API_BASE}/scan/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    target: target,
+                    modules: modules
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                monitorScan(data.scan_id);
+            } else {
+                showError(data.error || 'Failed to start scan');
+                scanInProgress = false;
+                document.getElementById('scanProgress').style.display = 'none';
+                document.getElementById('configPanel').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error starting scan:', error);
+            showError('Error starting scan');
+            scanInProgress = false;
+            document.getElementById('scanProgress').style.display = 'none';
+            document.getElementById('configPanel').style.display = 'block';
+        }
+    }
+
+    async function monitorScan(scanId) {
+        const interval = setInterval(async () => {
+            try {
+                const response = await fetch(`${API_BASE}/scan/${scanId}`);
+                const data = await response.json();
+
+                const progress = data.progress || 0;
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressText').textContent = 
+                    `${data.status || 'Running'}: ${progress}% - ${data.current_module || 'Initializing'}`;
+
+                if (data.status === 'completed' || data.status === 'failed') {
+                    clearInterval(interval);
+                    scanInProgress = false;
+                    setTimeout(() => {
+                        window.location.href = `/results?scan=${scanId}`;
+                    }, 1500);
+                }
+            } catch (error) {
+                console.error('Error monitoring scan:', error);
+            }
+        }, 1000);
+    }
+
+    function showError(message) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-danger';
+        alert.textContent = message;
+        document.querySelector('.section').insertBefore(alert, document.querySelector('.section').firstChild);
+        setTimeout(() => alert.remove(), 5000);
+    }
+</script>
+{% endblock %}

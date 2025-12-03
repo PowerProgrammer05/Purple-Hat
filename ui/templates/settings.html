@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section">
+    <h1>Settings & Configuration</h1>
+
+    <div class="card">
+        <div class="card-title">Active Configuration</div>
+        <div class="form-group">
+            <label>Current Mode:</label>
+            <input type="text" readonly value="{{ config.get('mode', 'ready_to_go') }}" style="background: rgba(5,8,15,0.8);">
+        </div>
+
+        <div class="form-group">
+            <label for="timeout">Timeout (seconds)</label>
+            <input type="number" id="timeout" name="timeout" value="{{ config.get('timeout', 5) }}" min="1" max="60">
+        </div>
+
+        <div class="form-group">
+            <label for="retries">Retry Attempts</label>
+            <input type="number" id="retries" name="retries" value="{{ config.get('retries', 3) }}" min="0" max="10">
+        </div>
+
+        <div class="form-group">
+            <label for="threads">Thread Count</label>
+            <input type="number" id="threads" name="threads" value="{{ config.get('sql_injection_threads', 10) }}" min="1" max="100">
+        </div>
+
+        <div class="form-group">
+            <label for="verifySSL">
+                <input type="checkbox" id="verifySSL" {% if config.get('verify_ssl', True) %}checked{% endif %}>
+                Verify SSL Certificates
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label for="verbose">
+                <input type="checkbox" id="verbose" {% if config.get('verbose', False) %}checked{% endif %}>
+                Enable Verbose Logging
+            </label>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Advanced Options</div>
+
+        <div class="form-group">
+            <label for="proxyEnabled">
+                <input type="checkbox" id="proxyEnabled" {% if config.get('proxy_enabled', False) %}checked{% endif %}>
+                Enable Proxy
+            </label>
+        </div>
+
+        <div class="form-group" id="proxySettings" style="display: none;">
+            <label for="proxyUrl">Proxy URL</label>
+            <input type="text" id="proxyUrl" placeholder="http://proxy.example.com:8080" value="{{ config.get('proxy_url', '') }}">
+        </div>
+
+        <div class="form-group">
+            <label for="portRange">Port Range</label>
+            <input type="text" id="portRange" placeholder="1-1000 or 80,443,8080" value="{{ config.get('port_scan_range', '1-1000') }}">
+        </div>
+
+        <div class="form-group">
+            <label for="resultsFormat">Results Format</label>
+            <select id="resultsFormat">
+                <option value="json" {% if config.get('results_format') == 'json' %}selected{% endif %}>JSON</option>
+                <option value="csv" {% if config.get('results_format') == 'csv' %}selected{% endif %}>CSV</option>
+                <option value="html" {% if config.get('results_format') == 'html' %}selected{% endif %}>HTML</option>
+                <option value="txt" {% if config.get('results_format') == 'txt' %}selected{% endif %}>Plain Text</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Module Configuration</div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <label><input type="checkbox" class="module" value="sql_injection" checked> SQL Injection</label>
+            <label><input type="checkbox" class="module" value="xss" checked> XSS Detection</label>
+            <label><input type="checkbox" class="module" value="command_injection"> Command Injection</label>
+            <label><input type="checkbox" class="module" value="port_scanner" checked> Port Scanner</label>
+            <label><input type="checkbox" class="module" value="ssl_analysis"> SSL/TLS Analysis</label>
+            <label><input type="checkbox" class="module" value="auth_testing"> Authentication</label>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Actions</div>
+        <button type="button" id="saveSettings" class="btn btn-primary">Save Settings</button>
+        <button type="button" id="resetSettings" class="btn btn-secondary" style="margin-left: 1rem;">Reset to Defaults</button>
+        <button type="button" id="exportConfig" class="btn btn-secondary" style="margin-left: 1rem;">Export Config</button>
+    </div>
+</div>
+
+<style>
+    .section {
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    select {
+        width: 100%;
+        padding: 0.75rem;
+        background: rgba(5, 8, 15, 0.6);
+        border: 1px solid #1a1f3a;
+        border-radius: 4px;
+        color: #e0e0e0;
+        font-family: inherit;
+    }
+
+    select:focus {
+        outline: none;
+        border-color: #8B00FF;
+        box-shadow: 0 0 10px rgba(139, 0, 255, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setupSettingsHandlers();
+    });
+
+    function setupSettingsHandlers() {
+        // Proxy toggle
+        document.getElementById('proxyEnabled')?.addEventListener('change', function() {
+            document.getElementById('proxySettings').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+
+        // Save settings
+        document.getElementById('saveSettings')?.addEventListener('click', saveSettings);
+        document.getElementById('resetSettings')?.addEventListener('click', resetSettings);
+        document.getElementById('exportConfig')?.addEventListener('click', exportConfig);
+    }
+
+    async function saveSettings() {
+        const config = {
+            timeout: parseInt(document.getElementById('timeout')?.value || 5),
+            retries: parseInt(document.getElementById('retries')?.value || 3),
+            sql_injection_threads: parseInt(document.getElementById('threads')?.value || 10),
+            verify_ssl: document.getElementById('verifySSL')?.checked || true,
+            verbose: document.getElementById('verbose')?.checked || false,
+            proxy_enabled: document.getElementById('proxyEnabled')?.checked || false,
+            proxy_url: document.getElementById('proxyUrl')?.value || '',
+            port_scan_range: document.getElementById('portRange')?.value || '1-1000',
+            results_format: document.getElementById('resultsFormat')?.value || 'json'
+        };
+
+        try {
+            const response = await fetch('/api/config/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+
+            if (response.ok) {
+                PurpleHat.Utils.notify('Settings saved successfully!', 'success');
+            } else {
+                PurpleHat.Utils.notify('Error saving settings', 'danger');
+            }
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            PurpleHat.Utils.notify('Error saving settings', 'danger');
+        }
+    }
+
+    function resetSettings() {
+        if (confirm('Reset all settings to defaults?')) {
+            location.reload();
+        }
+    }
+
+    function exportConfig() {
+        const config = {
+            timeout: document.getElementById('timeout')?.value,
+            retries: document.getElementById('retries')?.value,
+            proxy_enabled: document.getElementById('proxyEnabled')?.checked,
+            port_scan_range: document.getElementById('portRange')?.value
+        };
+
+        const dataStr = JSON.stringify(config, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'purple-hat-config.json';
+        link.click();
+        
+        PurpleHat.Utils.notify('Configuration exported', 'success');
+    }
+</script>
+{% endblock %}

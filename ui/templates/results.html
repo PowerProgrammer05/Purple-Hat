@@ -1,21 +1,145 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Results — PURPLE HAT</title>
-    <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:#0b0f14; color:#e6eef6; padding:40px; }
-      .box { background:#0f1720; padding:20px; border-radius:8px; max-width:1100px; margin:0 auto; }
-      pre { background:#07101a; padding:12px; border-radius:6px; overflow:auto; max-height:70vh }
-      a, button { color:#7c4dff }
-    </style>
-  </head>
-  <body>
-    <div class="box">
-      <h1>Automation Results for {{ target }}</h1>
-      <a href="/">← Back</a>
-      <h3>Structured Output</h3>
-      <pre>{{ data }}</pre>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section">
+    <h1>Scan Results & Findings</h1>
+
+    <div class="card">
+        <div class="card-title">Available Results</div>
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Target</th>
+                    <th>Scan Date</th>
+                    <th>Module</th>
+                    <th>Status</th>
+                    <th>Vulnerabilities</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #888;">Loading results...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-  </body>
-</html>
+
+    <div id="detailsPanel" style="display: none;">
+        <div class="card">
+            <div class="card-title">Vulnerability Details</div>
+            <div id="vulnDetails"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .section {
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-success {
+        background: rgba(0, 255, 136, 0.2);
+        color: #00FF88;
+    }
+
+    .status-failed {
+        background: rgba(255, 0, 85, 0.2);
+        color: #FF0055;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadResults();
+    });
+
+    async function loadResults() {
+        try {
+            const response = await fetch('/api/results');
+            const data = await response.json();
+            
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+
+            if (data.results && data.results.length > 0) {
+                data.results.forEach(result => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${result.target || 'N/A'}</td>
+                        <td>${new Date(result.started_at).toLocaleDateString()}</td>
+                        <td>${result.module || 'N/A'}</td>
+                        <td><span class="status-badge status-${result.status}">${result.status}</span></td>
+                        <td>${result.vulnerabilities?.length || 0}</td>
+                        <td>
+                            <button class="btn btn-secondary" onclick="viewDetails('${result.id}')">View</button>
+                            <button class="btn btn-primary" onclick="generateReport('${result.id}')">Report</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #888;">No results yet</td></tr>';
+            }
+        } catch (error) {
+            console.error('Error loading results:', error);
+            document.getElementById('resultsBody').innerHTML = '<tr><td colspan="6" style="color: red;">Error loading results</td></tr>';
+        }
+    }
+
+    function viewDetails(resultId) {
+        const detailsPanel = document.getElementById('detailsPanel');
+        const vulnDetails = document.getElementById('vulnDetails');
+        detailsPanel.style.display = 'block';
+        vulnDetails.innerHTML = '<p style="color: #888;">Loading details...</p>';
+        
+        // Load and display result details
+        setTimeout(() => {
+            vulnDetails.innerHTML = '<p>Details for result: ' + resultId + '</p>';
+        }, 500);
+    }
+
+    async function generateReport(resultId) {
+        try {
+            const response = await fetch('/api/report/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    scan_id: resultId,
+                    format: 'html'
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                // Download or display report
+                const reportWindow = window.open('', 'Report');
+                reportWindow.document.write(data.report);
+            }
+        } catch (error) {
+            console.error('Error generating report:', error);
+        }
+    }
+</script>
+{% endblock %}

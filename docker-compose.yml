@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  purple-hat:
+    build: .
+    container_name: purple-hat
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./results:/app/results
+      - ./sessions:/app/sessions
+      - ./logs:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=ui.webapp_v3
+      - PYTHONUNBUFFERED=1
+      - SECRET_KEY=your-secret-key-here
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - purple-hat-network
+
+networks:
+  purple-hat-network:
+    driver: bridge

@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: purple-hat
+    runtime: python
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && python -m flask db upgrade
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 4 --threads 2 --worker-class gthread ui.webapp_v3:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PORT
+        value: "10000"
+    healthCheckPath: /health
+    preDeployCommand: python -m pip install -U pip setuptools wheel
+    routes:
+      - path: /
+        destination: http://localhost:$PORT/
